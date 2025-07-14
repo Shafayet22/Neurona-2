@@ -165,12 +165,43 @@ def verify_creator():
 
     return render_template('verify_creator.html', email=session['email'])
 
+@app.route('/investor/verify', methods=['GET', 'POST'])
+def verify_investor():
+    if 'role' not in session or session['role'] != 'investor':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        full_name = request.form['full_name'].strip()
+        phone = request.form['phone'].strip()
+        gov_id = request.form['gov_id'].strip()
+        reason = request.form['reason'].strip()
+
+        conn = get_db_connection()
+        conn.execute('''
+            UPDATE users SET full_name=?, phone=?, gov_id=?, verification_reason=?
+            WHERE email=?
+        ''', (full_name, phone, gov_id, reason, session['email']))
+        conn.commit()
+        conn.close()
+
+        flash('Verification request submitted. Wait for admin approval.', 'info')
+        return redirect(url_for('investor_dashboard'))
+
+    return render_template('verify_investor.html', email=session['email'])
+
 @app.route('/investor_dashboard')
 def investor_dashboard():
     if 'username' in session and session.get('role') == 'investor':
-        return render_template('investor_dashboard.html', username=session['username'])
+        conn = get_db_connection()
+        user = conn.execute("SELECT verified FROM users WHERE email = ?", (session['email'],)).fetchone()
+        conn.close()
+        verified = user['verified'] if user else 0
+        session['verified'] = verified
+        return render_template('investor_dashboard.html', username=session['username'], verified=verified)
     flash('Access denied. Please login as Investor.', 'danger')
     return redirect(url_for('login'))
+
 
 @app.route('/admin_dashboard')
 def admin_dashboard():
@@ -193,6 +224,20 @@ def verify_creators():
     conn.close()
     return render_template('admin_verify_creator.html', creators=creators)
 
+@app.route('/admin/verify_investors')
+def verify_investors():
+    if session.get('role') != 'admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    investors = conn.execute(
+        "SELECT id, username, email, full_name, phone, gov_id, verification_reason FROM users WHERE role='investor' AND verified=0"
+    ).fetchall()
+    conn.close()
+    return render_template('admin_verify_investor.html', investors=investors)
+
+
 
 @app.route('/admin/approve_creator/<int:user_id>')
 def approve_creator(user_id):
@@ -206,6 +251,19 @@ def approve_creator(user_id):
     conn.close()
     flash('Creator approved and verified.', 'success')
     return redirect(url_for('verify_creators'))
+
+@app.route('/admin/approve_investor/<int:user_id>')
+def approve_investor(user_id):
+    if session.get('role') != 'admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    conn.execute("UPDATE users SET verified=1 WHERE id=?", (user_id,))
+    conn.commit()
+    conn.close()
+    flash('Investor approved and verified.', 'success')
+    return redirect(url_for('verify_investors'))
 
 
 @app.route('/logout')

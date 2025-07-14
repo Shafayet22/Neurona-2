@@ -165,6 +165,12 @@ def verify_creator():
 
     return render_template('verify_creator.html', email=session['email'])
 
+@app.route('/investor_dashboard')
+def investor_dashboard():
+    if 'username' in session and session.get('role') == 'investor':
+        return render_template('investor_dashboard.html', username=session['username'])
+    flash('Access denied. Please login as Investor.', 'danger')
+    return redirect(url_for('login'))
 
 @app.route('/admin_dashboard')
 def admin_dashboard():

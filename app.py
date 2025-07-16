@@ -10,6 +10,7 @@ app.secret_key = secrets.token_hex(16)
 DB_NAME = "users.db"
 
 
+
 def get_db_connection():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
@@ -193,11 +194,11 @@ def verify_investor():
 @app.route('/investor_dashboard')
 def investor_dashboard():
     if 'username' in session and session.get('role') == 'investor':
-        return render_template('investor_dashboard.html', username=session['username'])
         conn = get_db_connection()
         user = conn.execute("SELECT verified FROM users WHERE email = ?", (session['email'],)).fetchone()
         conn.close()
         verified = user['verified'] if user else 0
+        # Update session so you keep the verified status too
         session['verified'] = verified
         return render_template('investor_dashboard.html', username=session['username'], verified=verified)
     flash('Access denied. Please login as Investor.', 'danger')
@@ -272,6 +273,46 @@ def logout():
     session.clear()
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
+
+@app.route('/submit_idea', methods=['GET', 'POST'])
+def submit_idea():
+    if 'username' not in session or session['role'] != 'creator':
+        flash('Only creators can submit ideas.', 'danger')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        title = request.form['title']
+        category = request.form['category']
+        industry = request.form.get('industry')
+        summary = request.form.get('summary')
+        description = request.form.get('description')
+        funding = request.form.get('funding_needed', type=float)
+        equity = request.form.get('equity_offered', type=float)
+        contact_email = request.form.get('contact_email')
+
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT id FROM users WHERE email = ?", (session['email'],))
+        creator = c.fetchone()
+
+        if creator:
+            creator_id = creator['id']
+            c.execute('''
+                INSERT INTO ideas (
+                    creator_id, title, category, industry, summary, description,
+                    funding_needed, equity_offered, contact_email
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (creator_id, title, category, industry, summary, description, funding, equity, contact_email))
+            conn.commit()
+            conn.close()
+            flash('Idea submitted successfully!', 'success')
+            return redirect(url_for('creator_dashboard'))
+        else:
+            conn.close()
+            flash('Creator not found.', 'danger')
+            return redirect(url_for('submit_idea'))
+
+    return render_template('submit_idea.html')
 
 
 if __name__ == '__main__':

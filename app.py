@@ -274,43 +274,6 @@ def logout():
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
 
-@app.route('/submit_idea', methods=['GET', 'POST'])
-def submit_idea():
-    if 'username' not in session or session['role'] != 'creator':
-        flash('Only creators can submit ideas.', 'danger')
-        return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        title = request.form['title']
-        category = request.form['category']
-        industry = request.form.get('industry')
-        summary = request.form.get('summary')
-        description = request.form.get('description')
-        funding = request.form.get('funding_needed', type=float)
-        equity = request.form.get('equity_offered', type=float)
-        contact_email = request.form.get('contact_email')
-
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT id FROM users WHERE email = ?", (session['email'],))
-        creator = c.fetchone()
-
-        if creator:
-            creator_id = creator['id']
-            c.execute('''
-                INSERT INTO ideas (
-                    creator_id, title, category, industry, summary, description,
-                    funding_needed, equity_offered, contact_email
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (creator_id, title, category, industry, summary, description, funding, equity, contact_email))
-            conn.commit()
-            conn.close()
-            flash('Idea submitted successfully!', 'success')
-            return redirect(url_for('creator_dashboard'))
-        else:
-            conn.close()
-            flash('Creator not found.', 'danger')
-            return redirect(url_for('submit_idea'))
 
     return render_template('submit_idea.html')
 

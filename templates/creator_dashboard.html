@@ -11,32 +11,32 @@
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="#">Neurona</a>
-      <div class="creator-actions d-flex">
-        <a href="#" class="nav-link">Explore</a>
-        <a href="#" class="nav-link">Sell</a>
-      </div>
-      <div class="d-flex align-items-center ms-auto">
-        <span class="text-light me-3">{{ username }}</span>
-        {% if verified %}
-          <span class="badge bg-success">Verified</span>
-        {% endif %}
-        <div class="profile-dropdown ms-3">
-          <img src="{{ url_for('static', filename='images/profile.png') }}" class="profile-img" alt="Profile"/>
-          <div class="dropdown-content">
-            <a href="#">Profile</a>
-            <a href="#">Notification</a>
-            <a href="#">Wallet</a>
-            <a href="#">Portfolio</a>
-            <a href="{{ url_for('logout') }}">Logout</a>
-          </div>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="#">Neurona</a>
+    <div class="creator-actions d-flex">
+      <a href="{{ url_for('submit_idea') }}" class="nav-link">Upload Idea</a>
+    </div>
+    <div class="d-flex align-items-center ms-auto">
+      <span class="text-light me-3">{{ username }}</span>
+      {% if verified %}
+        <span class="badge bg-success">Verified</span>
+      {% endif %}
+      <div class="profile-dropdown ms-3">
+        <img src="{{ url_for('static', filename='images/profile.png') }}" class="profile-img" alt="Profile"/>
+        <div class="dropdown-content">
+          <a href="#">Profile</a>
+          <a href="#">Notification</a>
+          <a href="#">Wallet</a>
+          <a href="#">Portfolio</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
         </div>
       </div>
     </div>
-  </nav>
+  </div>
+</nav>
+
 
   <!-- Verification Notice -->
   {% if not verified %}

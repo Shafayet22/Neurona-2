@@ -166,6 +166,23 @@ def verify_creator():
 
     return render_template('verify_creator.html', email=session['email'])
 
+@app.route('/creator/upload_idea')
+def upload_idea():
+    if 'role' not in session or session['role'] != 'creator':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT verified FROM users WHERE email = ?', (session['email'],)).fetchone()
+    conn.close()
+
+    if user and user['verified'] == 1:
+        return redirect(url_for('submit_idea'))  # your actual submission route
+    else:
+        flash('Please verify yourself before uploading an idea.', 'warning')
+        return redirect(url_for('verify_creator'))
+
+
 @app.route('/investor/verify', methods=['GET', 'POST'])
 def verify_investor():
     if 'role' not in session or session['role'] != 'investor':

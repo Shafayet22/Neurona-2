@@ -9,13 +9,10 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 DB_NAME = "users.db"
 
-
-
 def get_db_connection():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
-
 
 def init_db():
     if not os.path.exists(DB_NAME):
@@ -319,7 +316,6 @@ def submit_idea():
             return redirect(url_for('submit_idea'))
 
     return render_template('submit_idea.html')
-
 
 if __name__ == '__main__':
     init_db()

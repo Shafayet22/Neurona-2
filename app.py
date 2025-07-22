@@ -115,7 +115,6 @@ def login():
                 session['email'] = user['email']
                 session['role'] = user['role']
                 session['verified'] = user['verified']
-                flash('Login successful!', 'success')
                 return redirect(url_for(f"{user['role']}_dashboard"))
             else:
                 flash('Incorrect password.', 'danger')
@@ -137,14 +136,13 @@ def creator_dashboard():
         # Update session so you keep the verified status too
         session['verified'] = verified
         return render_template('creator_dashboard.html', username=session['username'], verified=verified)
-    #flash('Access denied. Please login as Creator.', 'danger')
+
     return redirect(url_for('login'))
 
 
 @app.route('/creator/verify', methods=['GET', 'POST'])
 def verify_creator():
     if 'role' not in session or session['role'] != 'creator':
-        flash('Access denied.', 'danger')
         return redirect(url_for('login'))
 
     if request.method == 'POST':
@@ -169,7 +167,6 @@ def verify_creator():
 @app.route('/creator/upload_idea')
 def upload_idea():
     if 'role' not in session or session['role'] != 'creator':
-        flash('Access denied.', 'danger')
         return redirect(url_for('login'))
 
     conn = get_db_connection()
@@ -186,7 +183,6 @@ def upload_idea():
 @app.route('/investor/verify', methods=['GET', 'POST'])
 def verify_investor():
     if 'role' not in session or session['role'] != 'investor':
-        flash('Access denied.', 'danger')
         return redirect(url_for('login'))
 
     if request.method == 'POST':
@@ -218,14 +214,12 @@ def investor_dashboard():
         # Update session so you keep the verified status too
         session['verified'] = verified
         return render_template('investor_dashboard.html', username=session['username'], verified=verified)
-    #flash('Access denied. Please login as Investor.', 'danger')
     return redirect(url_for('login'))
 
 
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if session.get('role') != 'admin':
-        #flash('Access denied. Please login as Admin.', 'danger')
         return redirect(url_for('login'))
     return render_template('admin_dashboard.html', username=session.get('username'))
 
@@ -233,7 +227,6 @@ def admin_dashboard():
 @app.route('/admin/verify_creators')
 def verify_creators():
     if session.get('role') != 'admin':
-        flash('Access denied.', 'danger')
         return redirect(url_for('login'))
 
     conn = get_db_connection()
@@ -246,7 +239,6 @@ def verify_creators():
 @app.route('/admin/verify_investors')
 def verify_investors():
     if session.get('role') != 'admin':
-        flash('Access denied.', 'danger')
         return redirect(url_for('login'))
 
     conn = get_db_connection()
@@ -261,7 +253,6 @@ def verify_investors():
 @app.route('/admin/approve_creator/<int:user_id>')
 def approve_creator(user_id):
     if session.get('role') != 'admin':
-       # flash('Access denied.', 'danger')
         return redirect(url_for('login'))
 
     conn = get_db_connection()
@@ -274,14 +265,12 @@ def approve_creator(user_id):
 @app.route('/admin/approve_investor/<int:user_id>')
 def approve_investor(user_id):
     if session.get('role') != 'admin':
-        #flash('Access denied.', 'danger')
         return redirect(url_for('login'))
 
     conn = get_db_connection()
     conn.execute("UPDATE users SET verified=1 WHERE id=?", (user_id,))
     conn.commit()
     conn.close()
-    #flash('Investor approved and verified.', 'success')
     return redirect(url_for('verify_investors'))
 
 

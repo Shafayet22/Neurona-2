@@ -256,7 +256,6 @@ def approve_creator(user_id):
     conn.execute("UPDATE users SET verified=1 WHERE id=?", (user_id,))
     conn.commit()
     conn.close()
-   # flash('Creator approved and verified.', 'success')
     return redirect(url_for('verify_creators'))
 
 @app.route('/admin/approve_investor/<int:user_id>')

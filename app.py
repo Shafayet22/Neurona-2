@@ -29,6 +29,7 @@ def init_db():
                 full_name TEXT,
                 phone TEXT,
                 gov_id TEXT,
+                linkedin_id TEXT,
                 present_address TEXT
             )
         ''')

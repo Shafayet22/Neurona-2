@@ -29,7 +29,7 @@ def init_db():
                 full_name TEXT,
                 phone TEXT,
                 gov_id TEXT,
-                verification_reason TEXT
+                present_address TEXT
             )
         ''')
         admin_email = "admin@neurona.com"
@@ -146,13 +146,14 @@ def verify_creator():
         full_name = request.form['full_name'].strip()
         phone = request.form['phone'].strip()
         gov_id = request.form['gov_id'].strip()
-        reason = request.form['reason'].strip()
+        linkedin_id = request.form['linkedin_id'].strip()
+        present_address = request.form['present_address'].strip()
 
         conn = get_db_connection()
         conn.execute('''
-            UPDATE users SET full_name=?, phone=?, gov_id=?, verification_reason=?
+            UPDATE users SET full_name=?, phone=?, gov_id=?, linkedin_id=?, present_address=?
             WHERE email=?
-        ''', (full_name, phone, gov_id, reason, session['email']))
+        ''', (full_name, phone, gov_id, linkedin_id, present_address, session['email']))
         conn.commit()
         conn.close()
 
@@ -186,13 +187,14 @@ def verify_investor():
         full_name = request.form['full_name'].strip()
         phone = request.form['phone'].strip()
         gov_id = request.form['gov_id'].strip()
-        reason = request.form['reason'].strip()
+        linkedin_id = request.form['linkedin_id'].strip()
+        present_address = request.form['present_address'].strip()
 
         conn = get_db_connection()
         conn.execute('''
-            UPDATE users SET full_name=?, phone=?, gov_id=?, verification_reason=?
-            WHERE email=?
-        ''', (full_name, phone, gov_id, reason, session['email']))
+           UPDATE users SET full_name=?, phone=?, gov_id=?, linkedin_id=?, present_address=?
+           WHERE email=?
+            ''', (full_name, phone, gov_id, linkedin_id, present_address, session['email']))
         conn.commit()
         conn.close()
 
@@ -200,6 +202,8 @@ def verify_investor():
         return redirect(url_for('investor_dashboard'))
 
     return render_template('verify_investor.html', email=session['email'])
+
+
 
 @app.route('/investor_dashboard')
 def investor_dashboard():
@@ -228,7 +232,7 @@ def verify_creators():
 
     conn = get_db_connection()
     creators = conn.execute(
-        "SELECT id, username, email, full_name, phone, gov_id, verification_reason FROM users WHERE role='creator' AND verified=0"
+        "SELECT id, username, email, full_name, phone, gov_id, linkedin_id, present_address FROM users WHERE role='creator' AND verified=0"
     ).fetchall()
     conn.close()
     return render_template('admin_verify_creator.html', creators=creators)
@@ -240,7 +244,7 @@ def verify_investors():
 
     conn = get_db_connection()
     investors = conn.execute(
-        "SELECT id, username, email, full_name, phone, gov_id, verification_reason FROM users WHERE role='investor' AND verified=0"
+        "SELECT id, username, email, full_name, phone, gov_id, linkedin_id, present_address FROM users WHERE role='investor' AND verified=0"
     ).fetchall()
     conn.close()
     return render_template('admin_verify_investor.html', investors=investors)
@@ -256,7 +260,7 @@ def approve_creator(user_id):
     conn.execute("UPDATE users SET verified=1 WHERE id=?", (user_id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('verify_creators'))
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/approve_investor/<int:user_id>')
 def approve_investor(user_id):
@@ -267,14 +271,27 @@ def approve_investor(user_id):
     conn.execute("UPDATE users SET verified=1 WHERE id=?", (user_id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('verify_investors'))
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/decline_creator/<int:user_id>')
+def decline_creator(user_id):
+    conn = get_db_connection()
+    conn.execute('UPDATE users SET verified = 0 WHERE id = ?', (user_id,))
+    conn.commit()
+    conn.close()
+    flash('Your request for verification was declined.', 'warning')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/decline_investor/<int:user_id>')
+def decline_investor(user_id):
+    conn = get_db_connection()
+    conn.execute('UPDATE users SET verified = 0 WHERE id = ?', (user_id,))
+    conn.commit()
+    conn.close()
+    flash('Your request for verification was declined.', 'warning')
+    return redirect(url_for('admin_dashboard'))
 
 
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('You have been logged out.', 'success')
-    return redirect(url_for('login'))
 
 @app.route('/submit_idea', methods=['GET', 'POST'])
 def submit_idea():
@@ -315,6 +332,14 @@ def submit_idea():
             return redirect(url_for('submit_idea'))
 
     return render_template('submit_idea.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('login'))
+
 
 if __name__ == '__main__':
     init_db()

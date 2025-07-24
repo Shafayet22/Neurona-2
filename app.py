@@ -335,6 +335,19 @@ def submit_idea():
     return render_template('submit_idea.html')
 
 
+@app.route("/privacy-policy")
+def privacy_policy():
+    return render_template("privacy_policy.html")
+
+@app.route("/terms-of-service")
+def terms_of_service():
+    return render_template("terms_of_service.html")
+
+@app.route("/disclaimer")
+def disclaimer():
+    return render_template("disclaimer.html")
+
+
 @app.route('/logout')
 def logout():
     session.clear()

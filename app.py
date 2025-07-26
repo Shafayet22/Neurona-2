@@ -113,6 +113,7 @@ def login():
                 session['email'] = user['email']
                 session['role'] = user['role']
                 session['verified'] = user['verified']
+                session['user_id'] = user['id'] # <--- ADD THIS LINE!
                 return redirect(url_for(f"{user['role']}_dashboard"))
             else:
                 flash('Incorrect password.', 'danger')
@@ -219,11 +220,55 @@ def investor_dashboard():
     return redirect(url_for('login'))
 
 
+# Admin Dashboard: now includes user management stats and list
 @app.route('/admin_dashboard')
 def admin_dashboard():
-    if session.get('role') != 'admin':
+    if 'user_id' not in session or session.get('role') != 'admin':
         return redirect(url_for('login'))
-    return render_template('admin_dashboard.html', username=session.get('username'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'creator'")
+    total_creators = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'investor'")
+    total_investors = cursor.fetchone()[0]
+    cursor.execute("SELECT id, full_name, email, role, verified FROM users WHERE role IN ('creator', 'investor')")
+    all_users = cursor.fetchall()
+    conn.close()
+
+   
+    return render_template('admin_dashboard.html', username=session.get('username'), total_creators=total_creators,
+                           total_investors=total_investors, all_users=all_users)
+
+
+# Delete a user
+@app.route('/delete_user/<int:user_id>')
+def delete_user(user_id):
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    flash("User deleted successfully.", "success")
+    return redirect(url_for('admin_dashboard'))
+
+# Unverify a verified user
+@app.route('/unverify_user/<int:user_id>/<role>')
+def unverify_user(user_id, role):
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET verified = 0 WHERE id = ? AND role = ?", (user_id, role))
+    conn.commit()
+    conn.close()
+    flash("User verification removed.", "info")
+    return redirect(url_for('admin_dashboard'))
 
 
 @app.route('/admin/verify_creators')

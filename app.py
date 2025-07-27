@@ -241,8 +241,8 @@ def user_management():
     total_creators = cursor.fetchone()[0]
     cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'investor'")
     total_investors = cursor.fetchone()[0]
-    # Fetch only creators and investors for the user management table
-    cursor.execute("SELECT id, full_name, email, role, verified FROM users WHERE role IN ('creator', 'investor')")
+    # Select all relevant fields for display in the table
+    cursor.execute("SELECT id, username, email, role, verified, full_name, phone, gov_id, linkedin_id, present_address FROM users WHERE role IN ('creator', 'investor')")
     all_users = cursor.fetchall()
     conn.close()
 

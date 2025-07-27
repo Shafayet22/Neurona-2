@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Management – Neurona</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="{{ url_for('admin_dashboard') }}">Neurona</a>
+    <div class="d-flex align-items-center ms-auto">
+      <span class="text-light me-3">{{ username }}</span>
+      <div class="profile-dropdown ms-3">
+        <img src="{{ url_for('static', filename='images/profile.png') }}" class="profile-img" alt="Profile"/>
+        <div class="dropdown-content">
+          <a href="#">Commissions</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-5">
+  <h2 class="text-white mb-4">User Management</h2>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-6">
+      <div class="glass-card p-4 text-center admin-card">
+        <h5>Total Creators</h5>
+        <p class="display-4 text-white">{{ total_creators }}</p>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="glass-card p-4 text-center admin-card">
+        <h5>Total Investors</h5>
+        <p class="display-4 text-white">{{ total_investors }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5">
+    <h4 class="text-white mb-3">All Users</h4>
+    <div class="table-responsive">
+      <table class="table table-dark table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Verified</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in all_users %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>{{ user.full_name }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.role }}</td>
+              <td>
+                {% if user.verified %}
+                  ✅
+                {% else %}
+                  ❌
+                {% endif %}
+              </td>
+              <td>
+                {% if user.verified %}
+                  <a href="{{ url_for('unverify_user', user_id=user.id, role=user.role) }}" class="btn btn-warning btn-sm">Unverify</a>
+                {% endif %}
+                <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

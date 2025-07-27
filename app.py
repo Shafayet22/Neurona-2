@@ -220,9 +220,17 @@ def investor_dashboard():
     return redirect(url_for('login'))
 
 
-# Admin Dashboard: now includes user management stats and list
+
 @app.route('/admin_dashboard')
 def admin_dashboard():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    return render_template('admin_dashboard.html', username=session.get('username'))
+
+
+# New route for user management
+@app.route('/user_management')
+def user_management():
     if 'user_id' not in session or session.get('role') != 'admin':
         return redirect(url_for('login'))
 
@@ -233,12 +241,12 @@ def admin_dashboard():
     total_creators = cursor.fetchone()[0]
     cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'investor'")
     total_investors = cursor.fetchone()[0]
+    # Fetch only creators and investors for the user management table
     cursor.execute("SELECT id, full_name, email, role, verified FROM users WHERE role IN ('creator', 'investor')")
     all_users = cursor.fetchall()
     conn.close()
 
-   
-    return render_template('admin_dashboard.html', username=session.get('username'), total_creators=total_creators,
+    return render_template('user_management.html', username=session.get('username'), total_creators=total_creators,
                            total_investors=total_investors, all_users=all_users)
 
 
@@ -267,7 +275,6 @@ def unverify_user(user_id, role):
     cursor.execute("UPDATE users SET verified = 0 WHERE id = ? AND role = ?", (user_id, role))
     conn.commit()
     conn.close()
-    flash("User verification removed.", "info")
     return redirect(url_for('admin_dashboard'))
 
 

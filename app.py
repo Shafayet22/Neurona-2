@@ -152,17 +152,75 @@ def verify_creator():
         present_address = request.form['present_address'].strip()
 
         conn = get_db_connection()
+
+        # --- NEW LOGIC START ---
+        # Fetch the current verified status of the user
+        current_user = conn.execute("SELECT verified FROM users WHERE email = ?", (session['email'],)).fetchone()
+
+        # If the user was previously declined (verified = 2),
+        # set their status back to pending (0) upon re-submission.
+        # Otherwise, keep it as it was (likely 0 if initial submission).
+        new_verified_status = 0  # Default to pending upon submission
+        if current_user and current_user['verified'] == 1:
+            # If they were already verified, don't change it to pending
+            new_verified_status = 1
+        # --- NEW LOGIC END ---
+
         conn.execute('''
-            UPDATE users SET full_name=?, phone=?, gov_id=?, linkedin_id=?, present_address=?
+            UPDATE users SET full_name=?, phone=?, gov_id=?, linkedin_id=?, present_address=?, verified=?
             WHERE email=?
-        ''', (full_name, phone, gov_id, linkedin_id, present_address, session['email']))
+        ''', (full_name, phone, gov_id, linkedin_id, present_address, new_verified_status, session['email']))
         conn.commit()
         conn.close()
 
         flash('Verification request submitted. Wait for admin approval.', 'info')
+        # Update the session with the new status immediately
+        session['verified'] = new_verified_status
         return redirect(url_for('creator_dashboard'))
 
     return render_template('verify_creator.html', email=session['email'])
+
+
+@app.route('/investor/verify', methods=['GET', 'POST'])
+def verify_investor():
+    if 'role' not in session or session['role'] != 'investor':
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        full_name = request.form['full_name'].strip()
+        phone = request.form['phone'].strip()
+        gov_id = request.form['gov_id'].strip()
+        linkedin_id = request.form['linkedin_id'].strip()
+        present_address = request.form['present_address'].strip()
+
+        conn = get_db_connection()
+
+        # --- NEW LOGIC START ---
+        # Fetch the current verified status of the user
+        current_user = conn.execute("SELECT verified FROM users WHERE email = ?", (session['email'],)).fetchone()
+
+        # If the user was previously declined (verified = 2),
+        # set their status back to pending (0) upon re-submission.
+        # Otherwise, keep it as it was (likely 0 if initial submission).
+        new_verified_status = 0  # Default to pending upon submission
+        if current_user and current_user['verified'] == 1:
+            # If they were already verified, don't change it to pending
+            new_verified_status = 1
+        # --- NEW LOGIC END ---
+
+        conn.execute('''
+           UPDATE users SET full_name=?, phone=?, gov_id=?, linkedin_id=?, present_address=?, verified=?
+           WHERE email=?
+            ''', (full_name, phone, gov_id, linkedin_id, present_address, new_verified_status, session['email']))
+        conn.commit()
+        conn.close()
+
+        flash('Verification request submitted. Wait for admin approval.', 'info')
+        # Update the session with the new status immediately
+        session['verified'] = new_verified_status
+        return redirect(url_for('investor_dashboard'))
+
+    return render_template('verify_investor.html', email=session['email'])
 
 @app.route('/creator/upload_idea')
 def upload_idea():
@@ -180,30 +238,6 @@ def upload_idea():
         return redirect(url_for('verify_creator'))
 
 
-@app.route('/investor/verify', methods=['GET', 'POST'])
-def verify_investor():
-    if 'role' not in session or session['role'] != 'investor':
-        return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        full_name = request.form['full_name'].strip()
-        phone = request.form['phone'].strip()
-        gov_id = request.form['gov_id'].strip()
-        linkedin_id = request.form['linkedin_id'].strip()
-        present_address = request.form['present_address'].strip()
-
-        conn = get_db_connection()
-        conn.execute('''
-           UPDATE users SET full_name=?, phone=?, gov_id=?, linkedin_id=?, present_address=?
-           WHERE email=?
-            ''', (full_name, phone, gov_id, linkedin_id, present_address, session['email']))
-        conn.commit()
-        conn.close()
-
-        flash('Verification request submitted. Wait for admin approval.', 'info')
-        return redirect(url_for('investor_dashboard'))
-
-    return render_template('verify_investor.html', email=session['email'])
 
 
 
@@ -328,21 +362,36 @@ def approve_investor(user_id):
 
 @app.route('/decline_creator/<int:user_id>')
 def decline_creator(user_id):
+    # Ensure only admins can perform this action
+    if 'user_id' not in session or session.get('role') != 'admin':
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('login'))
+
     conn = get_db_connection()
-    conn.execute('UPDATE users SET verified = 0 WHERE id = ?', (user_id,))
+    # Set verified to 2 to indicate a declined status, so it no longer appears as 'pending' (0)
+    conn.execute('UPDATE users SET verified = 2 WHERE id = ?', (user_id,))
     conn.commit()
     conn.close()
-    flash('Your request for verification was declined.', 'warning')
-    return redirect(url_for('admin_dashboard'))
+    flash('Creator verification request successfully declined.', 'info')
+    # It's better to redirect back to the page showing pending creators to see the updated list
+    return redirect(url_for('verify_creators'))
+
 
 @app.route('/decline_investor/<int:user_id>')
 def decline_investor(user_id):
+    # Ensure only admins can perform this action
+    if 'user_id' not in session or session.get('role') != 'admin':
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('login'))
+
     conn = get_db_connection()
-    conn.execute('UPDATE users SET verified = 0 WHERE id = ?', (user_id,))
+    # Set verified to 2 to indicate a declined status, so it no longer appears as 'pending' (0)
+    conn.execute('UPDATE users SET verified = 2 WHERE id = ?', (user_id,))
     conn.commit()
     conn.close()
-    flash('Your request for verification was declined.', 'warning')
-    return redirect(url_for('admin_dashboard'))
+    flash('Investor verification request successfully declined.', 'info')
+    # It's better to redirect back to the page showing pending investors to see the updated list
+    return redirect(url_for('verify_investors'))
 
 
 

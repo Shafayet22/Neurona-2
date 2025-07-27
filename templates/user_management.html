@@ -28,17 +28,17 @@
 <div class="container mt-5">
   <h2 class="text-white mb-4">User Management</h2>
 
-  <div class="row g-4 mb-5">
-    <div class="col-md-6">
-      <div class="glass-card p-4 text-center admin-card">
-        <h5>Total Creators</h5>
-        <p class="display-4 text-white">{{ total_creators }}</p>
+  <div class="row g-4 mb-5 justify-content-center"> {# Added justify-content-center for centering #}
+    <div class="col-md-3 col-sm-6"> {# Reduced to col-md-3 for smaller width #}
+      <div class="glass-card p-3 text-center admin-card"> {# Reduced padding slightly #}
+        <h5 class="mb-2">Total Creators</h5> {# Added margin-bottom to h5 #}
+        <p class="display-6 text-white">{{ total_creators }}</p> {# Reduced font size to display-6 #}
       </div>
     </div>
-    <div class="col-md-6">
-      <div class="glass-card p-4 text-center admin-card">
-        <h5>Total Investors</h5>
-        <p class="display-4 text-white">{{ total_investors }}</p>
+    <div class="col-md-3 col-sm-6"> {# Reduced to col-md-3 for smaller width #}
+      <div class="glass-card p-3 text-center admin-card"> {# Reduced padding slightly #}
+        <h5 class="mb-2">Total Investors</h5> {# Added margin-bottom to h5 #}
+        <p class="display-6 text-white">{{ total_investors }}</p> {# Reduced font size to display-6 #}
       </div>
     </div>
   </div>
@@ -50,10 +50,15 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Username</th> <th>Full Name</th>
+            <th>Username</th>
+            <th>Full Name</th>
             <th>Email</th>
             <th>Role</th>
-            <th>Phone</th> <th>Gov ID</th> <th>LinkedIn ID</th> <th>Address</th> <th>Verified</th>
+            <th>Phone</th>
+            <th>Gov ID</th>
+            <th>LinkedIn ID</th>
+            <th>Address</th>
+            <th>Verified</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -61,7 +66,8 @@
           {% for user in all_users %}
             <tr>
               <td>{{ user.id }}</td>
-              <td>{{ user.username }}</td> <td>{{ user.full_name if user.full_name else 'N/A' }}</td>
+              <td>{{ user.username }}</td>
+              <td>{{ user.full_name if user.full_name else 'N/A' }}</td>
               <td>{{ user.email }}</td>
               <td>{{ user.role }}</td>
               <td>{{ user.phone if user.phone else 'N/A' }}</td>

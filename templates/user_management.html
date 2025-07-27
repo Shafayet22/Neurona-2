@@ -50,10 +50,10 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Full Name</th>
+            <th>Username</th> <th>Full Name</th>
             <th>Email</th>
             <th>Role</th>
-            <th>Verified</th>
+            <th>Phone</th> <th>Gov ID</th> <th>LinkedIn ID</th> <th>Address</th> <th>Verified</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -61,9 +61,13 @@
           {% for user in all_users %}
             <tr>
               <td>{{ user.id }}</td>
-              <td>{{ user.full_name }}</td>
+              <td>{{ user.username }}</td> <td>{{ user.full_name if user.full_name else 'N/A' }}</td>
               <td>{{ user.email }}</td>
               <td>{{ user.role }}</td>
+              <td>{{ user.phone if user.phone else 'N/A' }}</td>
+              <td>{{ user.gov_id if user.gov_id else 'N/A' }}</td>
+              <td>{{ user.linkedin_id if user.linkedin_id else 'N/A' }}</td>
+              <td>{{ user.present_address if user.present_address else 'N/A' }}</td>
               <td>
                 {% if user.verified %}
                   ✅

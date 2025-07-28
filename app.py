@@ -195,7 +195,6 @@ def verify_investor():
 
         conn = get_db_connection()
 
-        # --- NEW LOGIC START ---
         # Fetch the current verified status of the user
         current_user = conn.execute("SELECT verified FROM users WHERE email = ?", (session['email'],)).fetchone()
 
@@ -372,7 +371,7 @@ def decline_creator(user_id):
     conn.execute('UPDATE users SET verified = 2 WHERE id = ?', (user_id,))
     conn.commit()
     conn.close()
-    flash('Creator verification request successfully declined.', 'info')
+    flash('Verification request declined.', 'info')
     # It's better to redirect back to the page showing pending creators to see the updated list
     return redirect(url_for('verify_creators'))
 
@@ -389,7 +388,7 @@ def decline_investor(user_id):
     conn.execute('UPDATE users SET verified = 2 WHERE id = ?', (user_id,))
     conn.commit()
     conn.close()
-    flash('Investor verification request successfully declined.', 'info')
+    flash('Verification request declined.', 'info')
     # It's better to redirect back to the page showing pending investors to see the updated list
     return redirect(url_for('verify_investors'))
 
@@ -444,9 +443,9 @@ def privacy_policy():
 def terms_of_service():
     return render_template("terms_of_service.html")
 
-@app.route("/disclaimer")
-def disclaimer():
-    return render_template("disclaimer.html")
+@app.route("/about_us")
+def about_us():
+    return render_template("about_us.html")
 
 
 @app.route('/logout')
@@ -455,6 +454,10 @@ def logout():
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
 
+
+@app.route("/contact-us")
+def contact_us():
+    return render_template("contact_us.html")
 
 if __name__ == '__main__':
     init_db()

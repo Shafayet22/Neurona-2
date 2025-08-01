@@ -261,7 +261,7 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', username=session.get('username'))
 
 
-# New route for user management
+
 @app.route('/user_management')
 def user_management():
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -274,7 +274,6 @@ def user_management():
     total_creators = cursor.fetchone()[0]
     cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'investor'")
     total_investors = cursor.fetchone()[0]
-    # Select all relevant fields for display in the table
     cursor.execute("SELECT id, username, email, role, verified, full_name, phone, gov_id, linkedin_id, present_address FROM users WHERE role IN ('creator', 'investor')")
     all_users = cursor.fetchall()
     conn.close()
@@ -282,8 +281,6 @@ def user_management():
     return render_template('user_management.html', username=session.get('username'), total_creators=total_creators,
                            total_investors=total_investors, all_users=all_users)
 
-
-# Delete a user
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -291,13 +288,20 @@ def delete_user(user_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
+    # Prevent admin from deleting other admins or themselves
+    cursor.execute("SELECT role FROM users WHERE id = ?", (user_id,))
+    user_to_delete_role = cursor.fetchone()
+    if user_to_delete_role and user_to_delete_role['role'] == 'admin':
+        flash("Cannot delete an admin user.", "danger")
+        conn.close()
+        return redirect(url_for('user_management'))
+
     cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
     conn.commit()
     conn.close()
     flash("User deleted successfully.", "success")
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('user_management'))
 
-# Unverify a verified user
 @app.route('/unverify_user/<int:user_id>/<role>')
 def unverify_user(user_id, role):
     if 'user_id' not in session or session.get('role') != 'admin':
@@ -305,10 +309,16 @@ def unverify_user(user_id, role):
 
     conn = get_db_connection()
     cursor = conn.cursor()
+    if role == 'admin':
+        flash("Cannot unverify an admin user.", "danger")
+        conn.close()
+        return redirect(url_for('user_management'))
     cursor.execute("UPDATE users SET verified = 0 WHERE id = ? AND role = ?", (user_id, role))
     conn.commit()
     conn.close()
-    return redirect(url_for('admin_dashboard'))
+    flash("User verification removed.", "info")
+    return redirect(url_for('user_management'))
+
 
 
 @app.route('/admin/verify_creators')
@@ -448,16 +458,17 @@ def about_us():
     return render_template("about_us.html")
 
 
+@app.route("/contact-us")
+def contact_us():
+    return render_template("contact_us.html")
+
+
 @app.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
 
-
-@app.route("/contact-us")
-def contact_us():
-    return render_template("contact_us.html")
 
 if __name__ == '__main__':
     init_db()

@@ -62,6 +62,8 @@ def execute_db_operation(operation_func, *args, **kwargs):
             if conn:
                 conn.close()
 
+
+##################-----------------THESE ABLES ARE CREATED WHILE RUNNING THE APP(IF TABLES ARENT ALREADY THERE)----------######
 def init_db():
     def _init_db(conn):
         try:
@@ -305,6 +307,7 @@ def add_wallet_transaction(user_id, transaction_type, amount, description):
     
     execute_db_operation(_add_transaction, user_id, transaction_type, amount, description)
 
+
 @app.route('/process_investment_payment', methods=['POST'])
 def process_investment_payment():
     if 'user_id' not in session or session.get('role') != 'investor':
@@ -488,6 +491,8 @@ def register():
     
     return render_template('register.html')
 
+#########################------ROUTE FOR LOGIN--------------------------#####################
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -519,11 +524,7 @@ def login():
     
     return render_template('login.html')
 
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('index'))
+
 
 # Profile routes
 @app.route('/profile')
@@ -574,6 +575,7 @@ def profile():
     user, stats = execute_db_operation(_get_profile_data, session['user_id'], session['role'])
     return render_template('profile.html', user=user, stats=stats)
 
+
 # Creator routes
 @app.route('/creator_dashboard')
 @creator_required
@@ -602,6 +604,8 @@ def creator_dashboard():
                          username=session['username'],
                          verified=session.get('verified', 0))
 
+
+
 @app.route('/upload_idea', methods=['GET', 'POST'])
 @creator_required
 def upload_idea():
@@ -613,6 +617,7 @@ def upload_idea():
     return render_template('submit_idea.html', 
                          username=session['username'],
                          verified=session.get('verified', 0))
+
 
 @app.route('/submit_idea', methods=['POST'])
 @creator_required
@@ -700,6 +705,7 @@ def submit_idea():
         flash(f'Error submitting idea: {str(e)}', 'danger')
         return redirect(url_for('upload_idea'))
 
+
 @app.route('/creator/idea/<int:idea_id>')
 @creator_required
 def creator_idea_details(idea_id):
@@ -740,6 +746,7 @@ def creator_idea_details(idea_id):
                          total_raised=total_raised,
                          total_equity_allocated=total_equity_allocated)
 
+
 @app.route('/creator/idea/<int:idea_id>/delete', methods=['POST'])
 @creator_required
 def delete_creator_idea(idea_id):
@@ -764,6 +771,7 @@ def delete_creator_idea(idea_id):
         flash('Idea not found.', 'danger')
     
     return redirect(url_for('creator_dashboard'))
+
 
 @app.route('/creator/investment_requests')
 @creator_required
@@ -836,6 +844,7 @@ def handle_investment_request(request_id, action):
     
     return redirect(url_for('creator_investment_requests'))
 
+
 @app.route('/creator/wallet')
 @creator_required
 def creator_wallet():
@@ -858,6 +867,7 @@ def creator_wallet():
                          balance=balance,
                          username=session['username'],
                          verified=session.get('verified', 0))
+
 
 @app.route('/creator/add_funds', methods=['GET', 'POST'])
 @creator_required
@@ -951,6 +961,7 @@ def creator_add_funds():
     
     return redirect(url_for('creator_wallet'))
 
+
 @app.route('/creator/withdraw_funds', methods=['GET', 'POST'])
 @creator_required
 def creator_withdraw_funds():
@@ -980,6 +991,8 @@ def creator_withdraw_funds():
                          username=session['username'], 
                          verified=session.get('verified', 0),
                          balance=get_wallet_balance(session['user_id']))
+
+
 
 @app.route('/creator/portfolio')
 @creator_required
@@ -1014,6 +1027,7 @@ def creator_portfolio():
                          portfolio_stats=portfolio_stats,
                          username=session['username'],
                          verified=session.get('verified', 0))
+
 
 # Investor routes
 @app.route('/investor_dashboard')
@@ -1077,6 +1091,8 @@ def investor_dashboard():
                          portfolio_stats=portfolio_stats,
                          username=session['username'],
                          verified=session.get('verified', 0))
+
+
 @app.route('/idea/<int:idea_id>')
 @investor_required
 def idea_details(idea_id):
@@ -1386,6 +1402,7 @@ def investor_add_funds():
     
     return redirect(url_for('investor_wallet'))
 
+
 @app.route('/investor_withdraw_funds', methods=['GET', 'POST'])
 @investor_required
 def investor_withdraw_funds():
@@ -1415,6 +1432,7 @@ def investor_withdraw_funds():
                          username=session['username'], 
                          verified=session.get('verified', 0),
                          balance=get_wallet_balance(session['user_id']))
+
 
 # Verification routes
 @app.route('/verify_creator', methods=['GET', 'POST'])
@@ -1504,6 +1522,11 @@ def notifications():
     return render_template('notifications.html', 
                          notifications=notifications,
                          role=session.get('role'))
+
+
+
+#########################----------ADMIN LOGIC STARTS FROM HERE ---------------------------##########################
+
 
 # Admin routes
 @app.route('/admin_dashboard')
@@ -1683,6 +1706,9 @@ def unverify_user(user_id, role):
     flash(f'{role.title()} unverified successfully!', 'success')
     return redirect(url_for('user_management'))
 
+#######################---------------ADMIN LOGIC ENDS HERE------------------------####################################3
+
+
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
@@ -1691,6 +1717,12 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('500.html'), 500
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
